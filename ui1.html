@@ -1,0 +1,1781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WealthMap - Interactive Financial Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <style>
+        :root {
+            --primary: #0a2463;
+            --secondary: #3e92cc;
+            --accent: #2ec4b6;
+            --success: #38b000;
+            --warning: #ffb703;
+            --danger: #e63946;
+            --light: #f8f9fa;
+            --dark: #1c2541;
+            --gray-100: #f8f9fa;
+            --gray-200: #e9ecef;
+            --gray-300: #dee2e6;
+            --gray-800: #343a40;
+            --transition: all 0.3s ease;
+            --shadow: 0 4px 12px rgba(0,0,0,0.05);
+            --radius: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--gray-100);
+            color: var(--gray-800);
+            transition: var(--transition);
+        }
+
+        body.dark-mode {
+            background-color: #131927;
+            color: white;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--dark) 100%);
+            color: white;
+            padding: 2rem 1rem;
+            position: fixed;
+            height: 100vh;
+            width: 260px;
+            transition: var(--transition);
+            z-index: 100;
+            overflow-y: auto;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background-color: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin-right: 10px;
+        }
+
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #fff, var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-links {
+            list-style: none;
+            margin-top: 2rem;
+        }
+
+        .nav-item {
+            margin-bottom: 0.5rem;
+            border-radius: 8px;
+            transition: var(--transition);
+        }
+
+        .nav-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-item.active {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.8rem 1rem;
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .nav-link i {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+
+        .user-profile {
+            position: absolute;
+            bottom: 2rem;
+            width: 85%;
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: var(--radius);
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 10px;
+        }
+
+        .user-info h4 {
+            font-size: 0.9rem;
+            margin-bottom: 2px;
+        }
+
+        .user-info p {
+            font-size: 0.75rem;
+            opacity: 0.8;
+        }
+
+        /* Main Content */
+        .main-content {
+            grid-column: 2;
+            padding: 2rem;
+            transition: var(--transition);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .page-title h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.2rem;
+            color: var(--primary);
+            transition: var(--transition);
+        }
+
+        .dark-mode .page-title h1 {
+            color: white;
+        }
+
+        .page-title p {
+            color: var(--gray-800);
+            opacity: 0.7;
+            transition: var(--transition);
+        }
+
+        .dark-mode .page-title p {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .search-bar {
+            position: relative;
+        }
+
+        .search-bar input {
+            padding: 0.7rem 1rem 0.7rem 2.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--gray-300);
+            width: 250px;
+            font-family: 'Poppins', sans-serif;
+            transition: var(--transition);
+        }
+
+        .dark-mode .search-bar input {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: transparent;
+            color: white;
+        }
+
+        .search-bar i {
+            position: absolute;
+            left: 0.8rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-800);
+            opacity: 0.5;
+            transition: var(--transition);
+        }
+
+        .dark-mode .search-bar i {
+            color: white;
+        }
+
+        .notification-bell {
+            background: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+
+        .dark-mode .notification-bell {
+            background-color: rgba(255, 255, 255, 0.1);
+            box-shadow: none;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: var(--danger);
+            color: white;
+            font-size: 0.7rem;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .theme-toggle {
+            cursor: pointer;
+            width: 50px;
+            height: 26px;
+            border-radius: 13px;
+            background-color: var(--gray-300);
+            position: relative;
+            transition: var(--transition);
+        }
+
+        .theme-toggle::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: white;
+            top: 3px;
+            left: 3px;
+            transition: var(--transition);
+        }
+
+        .dark-mode .theme-toggle {
+            background-color: var(--secondary);
+        }
+
+        .dark-mode .theme-toggle::after {
+            transform: translateX(24px);
+        }
+
+        /* Dashboard Widgets */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .widget {
+            background: white;
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+
+        .dark-mode .widget {
+            background-color: var(--dark);
+            box-shadow: none;
+        }
+
+        .widget:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+
+        .dark-mode .widget:hover {
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+        }
+
+        .widget-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .widget-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--dark);
+            transition: var(--transition);
+        }
+
+        .dark-mode .widget-title {
+            color: white;
+        }
+
+        .widget-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .widget-icon.blue {
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
+        }
+
+        .widget-icon.green {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--success) 100%);
+        }
+
+        .widget-icon.orange {
+            background: linear-gradient(135deg, #ff9f1c 0%, var(--warning) 100%);
+        }
+
+        .widget-icon.purple {
+            background: linear-gradient(135deg, #8338ec 0%, #3a0ca3 100%);
+        }
+
+        .widget-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0.5rem 0;
+            transition: var(--transition);
+        }
+
+        .dark-mode .widget-value {
+            color: white;
+        }
+
+        .widget-trend {
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+
+        .widget-trend.up {
+            color: var(--success);
+        }
+
+        .widget-trend.down {
+            color: var(--danger);
+        }
+
+        .widget-trend i {
+            margin-right: 5px;
+        }
+
+        /* Chart Widgets */
+        .chart-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-widget {
+            background: white;
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+
+        .dark-mode .chart-widget {
+            background-color: var(--dark);
+            box-shadow: none;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .dark-mode .chart-title {
+            color: white;
+        }
+
+        .chart-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .chart-btn {
+            background: var(--gray-200);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .dark-mode .chart-btn {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .chart-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .chart-container {
+            height: 300px;
+            position: relative;
+        }
+
+        /* Portfolio Section */
+        .portfolio-section {
+            background: white;
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 1.5rem;
+            transition: var(--transition);
+        }
+
+        .dark-mode .portfolio-section {
+            background-color: var(--dark);
+            box-shadow: none;
+        }
+
+        .portfolio-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .portfolio-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .dark-mode .portfolio-title {
+            color: white;
+        }
+
+        .portfolio-actions button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: var(--transition);
+        }
+
+        .portfolio-actions button:hover {
+            background: var(--dark);
+        }
+
+        .dark-mode .portfolio-actions button:hover {
+            background: var(--secondary);
+        }
+
+        .assets-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .assets-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            color: var(--gray-800);
+            border-bottom: 1px solid var(--gray-200);
+            transition: var(--transition);
+        }
+
+        .dark-mode .assets-table th {
+            color: rgba(255, 255, 255, 0.7);
+            border-bottom-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .assets-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--gray-200);
+            transition: var(--transition);
+        }
+
+        .dark-mode .assets-table td {
+            border-bottom-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .asset-name {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .asset-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: white;
+        }
+
+        .asset-details h4 {
+            font-size: 1rem;
+            margin-bottom: 2px;
+            transition: var(--transition);
+        }
+
+        .dark-mode .asset-details h4 {
+            color: white;
+        }
+
+        .asset-details p {
+            font-size: 0.8rem;
+            color: var(--gray-800);
+            opacity: 0.7;
+            transition: var(--transition);
+        }
+
+        .dark-mode .asset-details p {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .asset-value, .asset-allocation {
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .dark-mode .asset-value, .dark-mode .asset-allocation {
+            color: white;
+        }
+
+        .asset-change.positive {
+            color: var(--success);
+        }
+
+        .asset-change.negative {
+            color: var(--danger);
+        }
+
+        .asset-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .asset-action-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--gray-200);
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .dark-mode .asset-action-btn {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .asset-action-btn:hover {
+            background: var(--gray-300);
+        }
+
+        .dark-mode .asset-action-btn:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Recent Activity */
+        .activity-feed {
+            background: white;
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+
+        .dark-mode .activity-feed {
+            background-color: var(--dark);
+            box-shadow: none;
+        }
+
+        .activity-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .activity-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .dark-mode .activity-title {
+            color: white;
+        }
+
+        .view-all {
+            color: var(--secondary);
+            font-weight: 500;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            transition: var(--transition);
+        }
+
+        .view-all:hover {
+            color: var(--primary);
+        }
+
+        .dark-mode .view-all:hover {
+            color: white;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--gray-200);
+            transition: var(--transition);
+        }
+
+        .dark-mode .activity-item {
+            border-bottom-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .activity-content {
+            flex-grow: 1;
+        }
+
+        .activity-content h4 {
+            font-size: 1rem;
+            margin-bottom: 0.3rem;
+            transition: var(--transition);
+        }
+
+        .dark-mode .activity-content h4 {
+            color: white;
+        }
+
+        .activity-content p {
+            font-size: 0.85rem;
+            color: var(--gray-800);
+            opacity: 0.7;
+            margin-bottom: 0.5rem;
+            transition: var(--transition);
+        }
+
+        .dark-mode .activity-content p {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .activity-time {
+            font-size: 0.8rem;
+            color: var(--gray-800);
+            opacity: 0.6;
+            transition: var(--transition);
+        }
+
+        .dark-mode .activity-time {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* Interactive Elements */
+        .portfolio-item {
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .portfolio-item:hover {
+            background-color: var(--gray-100);
+        }
+
+        .dark-mode .portfolio-item:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .portfolio-details {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .portfolio-details.active {
+            max-height: 300px;
+            transition: max-height 0.5s ease-in;
+        }
+
+        .details-content {
+            padding: 1rem;
+            background-color: var(--gray-100);
+            border-radius: 8px;
+            margin-top: 1rem;
+            transition: var(--transition);
+        }
+
+        .dark-mode .details-content {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .tooltip {
+            position: absolute;
+            background-color: white;
+            color: var(--dark);
+            padding: 0.5rem;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1000;
+        }
+
+        .dark-mode .tooltip {
+            background-color: var(--dark);
+            color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .chart-row {
+                grid-template-columns: 1fr;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 992px) {
+            .container {
+                grid-template-columns: 80px 1fr;
+            }
+            
+            .sidebar {
+                width: 80px;
+                padding: 2rem 0.5rem;
+            }
+            
+            .logo-text, .nav-link span, .user-info {
+                display: none;
+            }
+            
+            .nav-link {
+                justify-content: center;
+                padding: 0.8rem;
+            }
+            
+            .nav-link i {
+                margin-right: 0;
+                font-size: 1.5rem;
+            }
+            
+            .user-profile {
+                justify-content: center;
+                padding: 0.8rem;
+            }
+            
+            .main-content {
+                padding: 1.5rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                display: none;
+            }
+
+            .main-content {
+                grid-column: 1;
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            
+            .header-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .search-bar input {
+                width: 100%;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .assets-table thead {
+                display: none;
+            }
+            
+            .assets-table, .assets-table tbody, .assets-table tr, .assets-table td {
+                display: block;
+                width: 100%;
+            }
+            
+            .assets-table tr {
+                margin-bottom: 1rem;
+                border: 1px solid var(--gray-300);
+                border-radius: 8px;
+                padding: 1rem;
+            }
+
+            .dark-mode .assets-table tr {
+                border-color: rgba(255, 255, 255, 0.1);
+            }
+            
+            .assets-table td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                text-align: right;
+                padding: 0.5rem 0;
+                border-bottom: 1px dashed var(--gray-200);
+            }
+
+            .dark-mode .assets-table td {
+                border-bottom-color: rgba(255, 255, 255, 0.1);
+            }
+            
+            .assets-table td:last-child {
+                border-bottom: none;
+            }
+            
+            .assets-table td::before {
+                content: attr(data-label);
+                font-weight: 600;
+                text-align: left;
+            }
+            
+            .asset-name {
+                justify-content: flex-end;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .slide-up {
+            animation: slideUp 0.5s ease-out;
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        /* Interactive Hover Effects */
+        .interactive-hover {
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .interactive-hover:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+        }
+
+        .dark-mode .interactive-hover:hover {
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">W</div>
+                <span class="logo-text">WealthMap</span>
+            </div>
+            
+            <ul class="nav-links">
+                <li class="nav-item active">
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-home"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-chart-pie"></i>
+                        <span>Portfolio</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-exchange-alt"></i>
+                        <span>Transactions</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-lightbulb"></i>
+                        <span>Insights</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-university"></i>
+                        <span>Banking</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </a>
+                </li>
+            </ul>
+            
+            <div class="user-profile">
+                <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="User Avatar" class="user-avatar">
+                <div class="user-info">
+                    <h4>Alex Morgan</h4>
+                    <p>Premium User</p>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="header">
+                <div class="page-title">
+                    <h1>Financial Dashboard</h1>
+                    <p>Welcome back, Alex! Here's your financial overview.</p>
+                </div>
+                
+                <div class="header-actions">
+                    <div class="search-bar">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Search...">
+                    </div>
+                    
+                    <div class="notification-bell">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge">3</span>
+                    </div>
+                    
+                    <div class="theme-toggle" id="themeToggle"></div>
+                </div>
+            </div>
+            
+            <!-- Dashboard Widgets -->
+            <div class="dashboard-grid">
+                <div class="widget interactive-hover">
+                    <div class="widget-header">
+                        <span class="widget-title">Total Assets</span>
+                        <div class="widget-icon blue">
+                            <i class="fas fa-wallet"></i>
+                        </div>
+                    </div>
+                    <div class="widget-value" id="totalAssets">$0</div>
+                    <div class="widget-trend up">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>8.2% from last month</span>
+                    </div>
+                </div>
+                
+                <div class="widget interactive-hover">
+                    <div class="widget-header">
+                        <span class="widget-title">Monthly Income</span>
+                        <div class="widget-icon green">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                    </div>
+                    <div class="widget-value" id="monthlyIncome">$0</div>
+                    <div class="widget-trend up">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>4.5% from last month</span>
+                    </div>
+                </div>
+                
+                <div class="widget interactive-hover">
+                    <div class="widget-header">
+                        <span class="widget-title">Monthly Expenses</span>
+                        <div class="widget-icon orange">
+                            <i class="fas fa-credit-card"></i>
+                        </div>
+                    </div>
+                    <div class="widget-value" id="monthlyExpenses">$0</div>
+                    <div class="widget-trend down">
+                        <i class="fas fa-arrow-down"></i>
+                        <span>2.1% from last month</span>
+                    </div>
+                </div>
+                
+                <div class="widget interactive-hover">
+                    <div class="widget-header">
+                        <span class="widget-title">Savings Rate</span>
+                        <div class="widget-icon purple">
+                            <i class="fas fa-piggy-bank"></i>
+                        </div>
+                    </div>
+                    <div class="widget-value" id="savingsRate">0%</div>
+                    <div class="widget-trend up">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>5.3% from last month</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Chart Widgets -->
+            <div class="chart-row">
+                <div class="chart-widget">
+                    <div class="chart-header">
+                        <div class="chart-title">Portfolio Performance</div>
+                        <div class="chart-actions">
+                            <button class="chart-btn" data-period="1W">1W</button>
+                            <button class="chart-btn" data-period="1M">1M</button>
+                            <button class="chart-btn active" data-period="3M">3M</button>
+                            <button class="chart-btn" data-period="1Y">1Y</button>
+                            <button class="chart-btn" data-period="All">All</button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="performanceChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-widget">
+                    <div class="chart-header">
+                        <div class="chart-title">Asset Allocation</div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="allocationChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Portfolio Section -->
+            <div class="portfolio-section">
+                <div class="portfolio-header">
+                    <div class="portfolio-title">Investment Portfolio</div>
+                    <div class="portfolio-actions">
+                        <button id="addAssetBtn">
+                            <i class="fas fa-plus"></i>
+                            <span>Add Asset</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <table class="assets-table">
+                    <thead>
+                        <tr>
+                            <th>Asset</th>
+                            <th>Value</th>
+                            <th>Allocation</th>
+                            <th>Return</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="portfolio-item" data-asset="sp500">
+                            <td data-label="Asset">
+                                <div class="asset-name">
+                                    <div class="asset-icon" style="background: #3a86ff;">
+                                        <i class="fas fa-landmark"></i>
+                                    </div>
+                                    <div class="asset-details">
+                                        <h4>S&P 500 ETF</h4>
+                                        <p>US Equities</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td data-label="Value" class="asset-value">$45,230</td>
+                            <td data-label="Allocation" class="asset-allocation">36.3%</td>
+                            <td data-label="Return">
+                                <span class="asset-change positive">+12.4%</span>
+                            </td>
+                            <td data-label="Actions">
+                                <div class="asset-actions">
+                                    <button class="asset-action-btn view-details-btn" data-asset="sp500">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="asset-action-btn">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="asset-action-btn">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="portfolio-details" id="details-sp500">
+                            <td colspan="5">
+                                <div class="details-content">
+                                    <div id="assetDetailChart-sp500" style="height: 200px;"></div>
+                                </div>
+                            </td>
+                        </tr>
+                        
+                        <tr class="portfolio-item" data-asset="bonds">
+                            <td data-label="Asset">
+                                <div class="asset-name">
+                                    <div class="asset-icon" style="background: #f72585;">
+                                        <i class="fas fa-building"></i>
+                                    </div>
+                                    <div class="asset-details">
+                                        <h4>Corporate Bonds</h4>
+                                        <p>Fixed Income</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td data-label="Value" class="asset-value">$32,150</td>
+                            <td data-label="Allocation" class="asset-allocation">25.8%</td>
+                            <td data-label="Return">
+                                <span class="asset-change positive">+4.2%</span>
+                            </td>
+                            <td data-label="Actions">
+                                <div class="asset-actions">
+                                    <button class="asset-action-btn view-details-btn" data-asset="bonds">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="asset-action-btn">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="asset-action-btn">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="portfolio-details" id="details-bonds">
+                            <td colspan="5">
+                                <div class="details-content">
+                                    <div id="assetDetailChart-bonds" style="height: 200px;"></div>
+                                </div>
+                            </td>
+                        </tr>
+                        
+                        <tr class="portfolio-item" data-asset="gold">
+                            <td data-label="Asset">
+                                <div class="asset-name">
+                                    <div class="asset-icon" style="background: #ffd60a;">
+                                        <i class="fas fa-coins"></i>
+                                    </div>
+                                    <div class="asset-details">
+                                        <h4>Gold ETF</h4>
+                                        <p>Commodities</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td data-label="Value" class="asset-value">$18,750</td>
+                            <td data-label="Allocation" class="asset-allocation">15.1%</td>
+                            <td data-label="Return">
+                                <span class="asset-change negative">-2.3%</span>
+                            </td>
+                            <td data-label="Actions">
+                                <div class="asset-actions">
+                                    <button class="asset-action-btn view-details-btn" data-asset="gold">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="asset-action-btn">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="asset-action-btn">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="portfolio-details" id="details-gold">
+                            <td colspan="5">
+                                <div class="details-content">
+                                    <div id="assetDetailChart-gold" style="height: 200px;"></div>
+                                </div>
+                            </td>
+                        </tr>
+                        
+                        <tr class="portfolio-item" data-asset="reit">
+                            <td data-label="Asset">
+                                <div class="asset-name">
+                                    <div class="asset-icon" style="background: #2ec4b6;">
+                                        <i class="fas fa-home"></i>
+                                    </div>
+                                    <div class="asset-details">
+                                        <h4>REIT Fund</h4>
+                                        <p>Real Estate</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td data-label="Value" class="asset-value">$28,370</td>
+                            <td data-label="Allocation" class="asset-allocation">22.8%</td>
+                            <td data-label="Return">
+                                <span class="asset-change positive">+8.7%</span>
+                            </td>
+                            <td data-label="Actions">
+                                <div class="asset-actions">
+                                    <button class="asset-action-btn view-details-btn" data-asset="reit">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="asset-action-btn">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="asset-action-btn">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="portfolio-details" id="details-reit">
+                            <td colspan="5">
+                                <div class="details-content">
+                                    <div id="assetDetailChart-reit" style="height: 200px;"></div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Recent Activity -->
+            <div class="activity-feed">
+                <div class="activity-header">
+                    <div class="activity-title">Recent Activity</div>
+                    <a href="#" class="view-all">
+                        View All
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </div>
+                
+                <div class="activity-item slide-up">
+                    <div class="activity-icon" style="background: var(--success);">
+                        <i class="fas fa-arrow-down"></i>
+                    </div>
+                    <div class="activity-content">
+                        <h4>Deposit Received</h4>
+                        <p>Monthly salary deposit from TechCorp Inc.</p>
+                        <div class="activity-time">Today, 9:45 AM</div>
+                    </div>
+                </div>
+                
+                <div class="activity-item slide-up" style="animation-delay: 0.1s;">
+                    <div class="activity-icon" style="background: var(--primary);">
+                        <i class="fas fa-sync-alt"></i>
+                    </div>
+                    <div class="activity-content">
+                        <h4>Portfolio Rebalanced</h4>
+                        <p>Automatic quarterly rebalancing completed.</p>
+                        <div class="activity-time">Yesterday, 2:30 PM</div>
+                    </div>
+                </div>
+                
+                <div class="activity-item slide-up" style="animation-delay: 0.2s;">
+                    <div class="activity-icon" style="background: var(--danger);">
+                        <i class="fas fa-arrow-up"></i>
+                    </div>
+                    <div class="activity-content">
+                        <h4>Bill Payment</h4>
+                        <p>Monthly mortgage payment to HomeBank.</p>
+                        <div class="activity-time">May 15, 10:15 AM</div>
+                    </div>
+                </div>
+                
+                <div class="activity-item slide-up" style="animation-delay: 0.3s;">
+                    <div class="activity-icon" style="background: var(--warning);">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <div class="activity-content">
+                        <h4>Investment Alert</h4>
+                        <p>S&P 500 ETF reached your target price of $450.</p>
+                        <div class="activity-time">May 14, 3:20 PM</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="tooltip" id="tooltip"></div>
+
+    <script>document.addEventListener('DOMContentLoaded', function() {
+    // Theme Toggle
+    const themeToggle = document.getElementById('themeToggle');
+    const body = document.body;
+    
+    themeToggle.addEventListener('click', function() {
+        body.classList.toggle('dark-mode');
+        updateChartsTheme();
+    });
+    
+    // Counter Animation for Stats
+    function animateValue(id, start, end, duration) {
+        const obj = document.getElementById(id);
+        const range = end - start;
+        const minTimer = 50;
+        const stepTime = Math.abs(Math.floor(duration / range));
+        const startTime = new Date().getTime();
+        const endTime = startTime + duration;
+        let timer;
+        
+        function run() {
+            const now = new Date().getTime();
+            const remaining = Math.max((endTime - now) / duration, 0);
+            const value = Math.round(end - (remaining * range));
+            
+            if (id === 'savingsRate') {
+                obj.textContent = value + '%';
+            } else {
+                obj.textContent = '$' + value.toLocaleString();
+            }
+            
+            if (value === end) {
+                clearInterval(timer);
+            }
+        }
+        
+        timer = setInterval(run, stepTime);
+        run();
+    }
+    
+    // Animate stats with slight delay for effect
+    setTimeout(() => animateValue('totalAssets', 0, 124500, 2000), 300);
+    setTimeout(() => animateValue('monthlyIncome', 0, 9840, 1500), 600);
+    setTimeout(() => animateValue('monthlyExpenses', 0, 6250, 1500), 900);
+    setTimeout(() => animateValue('savingsRate', 0, 36.5, 1500), 1200);
+    
+    // Performance Chart
+    const performanceCtx = document.getElementById('performanceChart').getContext('2d');
+    const performanceChart = new Chart(performanceCtx, {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+            datasets: [{
+                label: 'Portfolio Value',
+                data: [90000, 95000, 94000, 100000, 105000, 108000, 112000, 110000, 118000, 120000, 125000, 124500],
+                backgroundColor: 'rgba(46, 196, 182, 0.2)',
+                borderColor: '#2ec4b6',
+                borderWidth: 3,
+                pointBackgroundColor: '#fff',
+                pointBorderColor: '#2ec4b6',
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            plugins: {
+                tooltip: {
+                    backgroundColor: body.classList.contains('dark-mode') ? '#1c2541' : '#fff',
+                    titleColor: body.classList.contains('dark-mode') ? '#fff' : '#333',
+                    bodyColor: body.classList.contains('dark-mode') ? '#fff' : '#333',
+                    borderColor: body.classList.contains('dark-mode') ? '#3e92cc' : '#e9ecef',
+                    borderWidth: 1,
+                    padding: 10,
+                    cornerRadius: 6,
+                    displayColors: false,
+                    callbacks: {
+                        label: function(context) {
+                            return `$${context.parsed.y.toLocaleString()}`;
+                        }
+                    }
+                },
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    min: 80000,
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + (value / 1000) + 'K';
+                        },
+                        color: body.classList.contains('dark-mode') ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)'
+                    },
+                    grid: {
+                        color: body.classList.contains('dark-mode') ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                    }
+                },
+                x: {
+                    ticks: {
+                        color: body.classList.contains('dark-mode') ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)'
+                    },
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+    
+    // Asset Allocation Chart
+    const allocationCtx = document.getElementById('allocationChart').getContext('2d');
+    const allocationChart = new Chart(allocationCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['US Equities', 'Fixed Income', 'Commodities', 'Real Estate'],
+            datasets: [{
+                data: [36.3, 25.8, 15.1, 22.8],
+                backgroundColor: ['#3a86ff', '#f72585', '#ffd60a', '#2ec4b6'],
+                borderWidth: 0,
+                hoverOffset: 10
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '60%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        color: body.classList.contains('dark-mode') ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)',
+                        usePointStyle: true,
+                        pointStyle: 'circle'
+                    }
+                },
+                tooltip: {
+                    backgroundColor: body.classList.contains('dark-mode') ? '#1c2541' : '#fff',
+                    titleColor: body.classList.contains('dark-mode') ? '#fff' : '#333',
+                    bodyColor: body.classList.contains('dark-mode') ? '#fff' : '#333',
+                    borderColor: body.classList.contains('dark-mode') ? '#3e92cc' : '#e9ecef',
+                    borderWidth: 1,
+                    padding: 10,
+                    cornerRadius: 6,
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.label}: ${context.parsed}%`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    function updateChartsTheme() {
+        const isDarkMode = body.classList.contains('dark-mode');
+        
+        // Update Performance Chart
+        performanceChart.options.plugins.tooltip.backgroundColor = isDarkMode ? '#1c2541' : '#fff';
+        performanceChart.options.plugins.tooltip.titleColor = isDarkMode ? '#fff' : '#333';
+        performanceChart.options.plugins.tooltip.bodyColor = isDarkMode ? '#fff' : '#333';
+        performanceChart.options.scales.y.ticks.color = isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)';
+        performanceChart.options.scales.y.grid.color = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+        performanceChart.options.scales.x.ticks.color = isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)';
+        performanceChart.update();
+        
+        // Update Allocation Chart
+        allocationChart.options.plugins.legend.labels.color = isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)';
+        allocationChart.options.plugins.tooltip.backgroundColor = isDarkMode ? '#1c2541' : '#fff';
+        allocationChart.options.plugins.tooltip.titleColor = isDarkMode ? '#fff' : '#333';
+        allocationChart.options.plugins.tooltip.bodyColor = isDarkMode ? '#fff' : '#333';
+        allocationChart.update();
+        
+        // Update Asset Detail Charts if they exist
+        if (window.assetCharts) {
+            for (const chartId in window.assetCharts) {
+                if (window.assetCharts.hasOwnProperty(chartId)) {
+                    const chart = window.assetCharts[chartId];
+                    chart.updateOptions({
+                        theme: {
+                            mode: isDarkMode ? 'dark' : 'light'
+                        }
+                    });
+                }
+            }
+        }
+    }
+    
+    // Time period buttons
+    const timeButtons = document.querySelectorAll('.chart-btn');
+    timeButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            timeButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            
+            // In a real app, you would fetch data for the selected time period
+            // For this demo, we'll just show a different dataset
+            const period = this.getAttribute('data-period');
+            updateChartData(period);
+        });
+    });
+    
+    function updateChartData(period) {
+        let data;
+        let labels;
+        
+        switch(period) {
+            case '1W':
+                data = [122000, 123000, 121500, 122500, 123500, 124000, 124500];
+                labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                break;
+            case '1M':
+                data = [118000, 119500, 121000, 120000, 122000, 123500, 124500];
+                labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+                break;
+            case '3M':
+                data = [110000, 112000, 118000, 120000, 125000, 124500];
+                labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+                break;
+            case '1Y':
+                data = [90000, 95000, 94000, 100000, 105000, 108000, 112000, 110000, 118000, 120000, 125000, 124500];
+                labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                break;
+            case 'All':
+                data = [50000, 55000, 60000, 68000, 75000, 82000, 90000, 105000, 115000, 124500];
+                labels = ['2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025'];
+                break;
+        }
+        
+        performanceChart.data.datasets[0].data = data;
+        performanceChart.data.labels = labels;
+        performanceChart.update();
+    }
+    
+    // Portfolio item details toggle
+    const viewDetailsButtons = document.querySelectorAll('.view-details-btn');
+    window.assetCharts = {};
+    
+    viewDetailsButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const assetId = this.getAttribute('data-asset');
+            const detailsRow = document.getElementById(`details-${assetId}`);
+            
+            if (detailsRow.classList.contains('active')) {
+                detailsRow.classList.remove('active');
+            } else {
+                // Close any open details first
+                document.querySelectorAll('.portfolio-details.active').forEach(row => {
+                    row.classList.remove('active');
+                });
+                
+                detailsRow.classList.add('active');
+                
+                // Initialize the asset detail chart if it doesn't exist
+                if (!window.assetCharts[assetId]) {
+                    initAssetDetailChart(assetId);
+                }
+            }
+        });
+    });
+    
+    // Initialize asset detail charts
+    function initAssetDetailChart(assetId) {
+        const chartData = {
+            sp500: {
+                color: '#3a86ff',
+                data: [420, 425, 418, 430, 445, 460, 455, 470, 480, 475, 490, 495]
+            },
+            bonds: {
+                color: '#f72585',
+                data: [105, 106, 107, 106, 105, 107, 108, 109, 108, 107, 109, 110]
+            },
+            gold: {
+                color: '#ffd60a',
+                data: [1850, 1830, 1810, 1790, 1800, 1820, 1815, 1805, 1790, 1780, 1770, 1760]
+            },
+            reit: {
+                color: '#2ec4b6',
+                data: [22, 22.5, 23, 22.8, 23.5, 24, 24.5, 24.2, 25, 25.5, 26, 26.8]
+            }
+        };
+        
+        const isDarkMode = body.classList.contains('dark-mode');
+        
+        const options = {
+            chart: {
+                type: 'area',
+                height: 200,
+                toolbar: {
+                    show: false
+                },
+                animations: {
+                    enabled: true,
+                    easing: 'easeinout',
+                    speed: 800,
+                    animateGradually: {
+                        enabled: true,
+                        delay: 150
+                    },
+                    dynamicAnimation: {
+                        enabled: true,
+                        speed: 350
+                    }
+                },
+                theme: {
+                    mode: isDarkMode ? 'dark' : 'light'
+                }
+            },
+            colors: [chartData[assetId].color],
+            series: [{
+                name: 'Price',
+                data: chartData[assetId].data
+            }],
+            fill: {
+                type: 'gradient',
+                gradient: {
+                    shadeIntensity: 1,
+                    opacityFrom: 0.7,
+                    opacityTo: 0.2,
+                    stops: [0, 90, 100]
+                }
+            },
+            stroke: {
+                curve: 'smooth',
+                width: 3
+            },
+            xaxis: {
+                categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                labels: {
+                    style: {
+                        colors: isDarkMode ? '#fff' : '#333'
+                    }
+                }
+            },
+            yaxis: {
+                labels: {
+                    style: {
+                        colors: isDarkMode ? '#fff' : '#333'
+                    }
+                }
+            },
+            tooltip: {
+                theme: isDarkMode ? 'dark' : 'light'
+            }
+        };
+        
+        const chart = new ApexCharts(document.getElementById(`assetDetailChart-${assetId}`), options);
+        chart.render();
+        
+        // Store the chart reference for later updates
+        window.assetCharts[assetId] = chart;
+    }
+    
+    // Add Asset Button Animation
+    const addAssetBtn = document.getElementById('addAssetBtn');
+    if (addAssetBtn) {
+        addAssetBtn.addEventListener('click', function() {
+            this.classList.add('pulse');
+            setTimeout(() => {
+                this.classList.remove('pulse');
+                alert('Add Asset functionality would open a modal in a real application.');
+            }, 300);
+        });
+    }
+    
+    // Tooltip functionality
+    const tooltip = document.getElementById('tooltip');
+    const interactiveElements = document.querySelectorAll('.interactive-hover');
+    
+    interactiveElements.forEach(element => {
+        element.addEventListener('mousemove', function(e) {
+            const rect = this.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            tooltip.style.left = (e.pageX + 10) + 'px';
+            tooltip.style.top = (e.pageY + 10) + 'px';
+            tooltip.textContent = this.querySelector('.widget-title').textContent + ' Details';
+            tooltip.style.opacity = '1';
+        });
+        
+        element.addEventListener('mouseleave', function() {
+            tooltip.style.opacity = '0';
+        });
+    });
+});
+</script>
